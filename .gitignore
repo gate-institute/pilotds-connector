@@ -1,0 +1,4 @@
+.env
+data/
+conf/config.json
+conf/keystore.p12

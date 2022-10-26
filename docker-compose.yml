@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=connector
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=connectordb
+
+  connector:
+    image: ghcr.io/international-data-spaces-association/dataspace-connector:7.1.0
+    container_name: connector
+    expose:
+      - 8080
+    depends_on:
+      - postgres
+    volumes:
+      - ./conf/config.json:/config/config.json
+      - ./conf/keystore.p12:/config/keystore.p12
+      - ./conf/truststore.p12:/config/truststore.p12
+      - ./conf/log4j2.xml:/app/log4j2.xml
+    environment:
+      - CONFIGURATION_PATH=/config/config.json
+      - CONFIGURATION_FORCE_RELOAD=true
+      - SPRING_SECURITY_USER_PASSWORD=${CONNECTOR_PASSWORD}
+      - DAPS_URL=${DAPS_URL}
+      - DAPS_TOKEN_URL=${DAPS_URL}/token
+      - DAPS_KEY_URL=${DAPS_URL}/jwks.json
+      - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
+      - DAPS_WHITELISTED_URL=${DAPS_URL}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/connectordb
+      - SPRING_DATASOURCE_USERNAME=connector
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_DATASOURCE_PLATFORM=postgres
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+
+  connector-ui:
+    image: ghcr.io/international-data-spaces-association/dataspace-connector-ui
+    container_name: connector-ui
+    ports:
+      - 8080:8083
+    environment:
+      - CONNECTOR_URL=${CONNECTOR_URL}
+      - CONNECTOR_USER=admin
+      - CONNECTOR_PASSWORD=${CONNECTOR_PASSWORD}
+      - BASIC_AUTH_USER=admin
+      - BASIC_AUTH_PASSWORD=${CONNECTOR_PASSWORD}
+      
