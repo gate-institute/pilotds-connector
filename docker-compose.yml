@@ -1,6 +1,18 @@
 version: '3'
 
 services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    environment:
+      - CONNECTOR_URL=${CONNECTOR_URL}
+
   postgres:
     image: postgres:latest
     container_name: postgres
@@ -28,7 +40,6 @@ services:
       - ./conf/log4j2.xml:/app/log4j2.xml
     environment:
       - CONFIGURATION_PATH=/config/config.json
-      - CONFIGURATION_FORCE_RELOAD=true
       - SPRING_SECURITY_USER_PASSWORD=${CONNECTOR_PASSWORD}
       - DAPS_URL=${DAPS_URL}
       - DAPS_TOKEN_URL=${DAPS_URL}/token
@@ -46,7 +57,7 @@ services:
     image: ghcr.io/international-data-spaces-association/dataspace-connector-ui
     container_name: connector-ui
     ports:
-      - 8080:8083
+      - 8083:8083
     environment:
       - CONNECTOR_URL=${CONNECTOR_URL}
       - CONNECTOR_USER=admin

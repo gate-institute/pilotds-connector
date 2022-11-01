@@ -1,15 +1,15 @@
 #!/bin/bash
 
-default_connector_url="http://localhost:8080"
 default_connector_title="Urban Dataspace Connector Title"
 default_connector_description="Urban Dataspace Connector Description"
 default_connector_password="password"
 default_postgres_password="password"
 
-echo -n "Please enter the URL of the connector [$default_connector_url]: "
+echo -n "Please enter the URL of the connector [e.g. uds.example.com]: "
 read connector_url
 if [ -z $connector_url ]; then
-   connector_url=$default_connector_url
+    echo "Connector URL cannot be empty"
+    exit -1
 fi
 
 echo -n "Please enter the connector title [$default_connector_title]: "
@@ -45,8 +45,6 @@ POSTGRES_PASSWORD=$postgres_password
 DAPS_URL=https://pilotds-infra.gate-ai.eu
 EOF
 
-uuid=`uuidgen`
-
 cat > ./conf/config.json <<EOF
 {
   "@context" : {
@@ -63,7 +61,7 @@ cat > ./conf/config.json <<EOF
   },
   "ids:connectorDescription" : {
     "@type" : "ids:BaseConnector",
-    "@id" : "https://w3id.org/idsa/autogen/baseConnector/$uuid",
+    "@id" : "https://${connector_url}",
     "ids:description" : [ {
       "@value" : "$connector_description",
       "@type" : "http://www.w3.org/2001/XMLSchema#string"
@@ -83,9 +81,9 @@ cat > ./conf/config.json <<EOF
     },
     "ids:hasDefaultEndpoint" : {
       "@type" : "ids:ConnectorEndpoint",
-      "@id" : "$connector_url/api/ids/data",
+      "@id" : "https://${connector_url}/api/ids/data",
       "ids:accessURL" : {
-        "@id" : "$connector_url/api/ids/data"
+        "@id" : "https://${connector_url}/api/ids/data"
       }
     },
     "ids:inboundModelVersion" : [ "4.0.0", "4.1.0", "4.1.2", "4.2.0", "4.2.1", "4.2.2", "4.2.3", "4.2.4", "4.2.5", "4.2.6", "4.2.7" ],
@@ -112,6 +110,12 @@ echo "Connector Description : $connector_description"
 echo "Connector Password    : $connector_password"
 echo "Postgres Password     : $postgres_password"
 echo
-echo "Please copy the keystore.p12 file into ./conf directory"
+echo "Further steps:"
 echo
-echo "Then use 'sudo docker-compose up' to run the connector"
+echo "1. Copy keystore.p12 you received into ./conf directory"
+echo
+echo "2. Copy your server certificate to ./nginx/certs/${connector_url}.crt"
+echo
+echo "3. Copy your server key to ./nginx/certs/${connector_url}.key"
+echo
+echo "4. The command 'sudo docker-compose up -d' will run your connector"
