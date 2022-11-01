@@ -1,0 +1,1 @@
+This directory must contain the TLS server certificate and key for the proper access to your connector via https
